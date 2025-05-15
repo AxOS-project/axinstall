@@ -88,6 +88,13 @@ axinstall-cli is an installer backend for AxOS.
 # axinstall-cli setup-keyring
 ```
 
+### Install a user kit
+```sh
+# axinstall-cli user-kit artist
+# axinstall-cli user-kit developer
+# axinstall-cli user-kit hacker
+```
+
 ### Debug logging
 
 debug messages:
