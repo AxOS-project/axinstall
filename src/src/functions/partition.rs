@@ -50,11 +50,8 @@ pub fn partition(
                 crash(format!("The device {device:?} doesn't exist"), 1);
             }
             log::debug!("automatically partitioning {device:?}");
-            if efi {
-                partition_with_efi(&device);
-            } else {
-                partition_no_efi(&device);
-            }
+            partition_with_efi(&device);
+            
             if device.to_string_lossy().contains("nvme")
                 || device.to_string_lossy().contains("mmcblk")
             {
@@ -93,51 +90,6 @@ pub fn partition(
     }
 }
 
-fn partition_no_efi(device: &Path) {
-    let device = device.to_string_lossy().to_string();
-    exec_eval(
-        exec(
-            "parted",
-            vec![
-                String::from("-s"),
-                String::from(&device),
-                String::from("mklabel"),
-                String::from("msdos"),
-            ],
-        ),
-        format!("Create msdos label on {}", device).as_str(),
-    );
-    exec_eval(
-        exec(
-            "parted",
-            vec![
-                String::from("-s"),
-                String::from(&device),
-                String::from("mkpart"),
-                String::from("primary"),
-                String::from("ext4"),
-                String::from("1MIB"),
-                String::from("512MIB"),
-            ],
-        ),
-        "create bios boot partition",
-    );
-    exec_eval(
-        exec(
-            "parted",
-            vec![
-                String::from("-s"),
-                device,
-                String::from("mkpart"),
-                String::from("primary"),
-                String::from("ext4"),
-                String::from("512MIB"),
-                String::from("100%"),
-            ],
-        ),
-        "create ext4 root partition",
-    );
-}
 
 fn partition_with_efi(device: &Path) {
     let device = device.to_string_lossy().to_string();
