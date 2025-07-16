@@ -44,7 +44,7 @@ pub fn install_base_packages(kernel: String) {
         "grub-theme-axos",
         "axctl",
         // Extra goodies
-        "neofetch",
+        "fastfetch", // stable now contains the AxOS ASCII logo
         "axos/plymouth",
         "plymouth-theme-axos",
         // Fonts
