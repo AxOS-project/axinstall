@@ -83,6 +83,23 @@ fn install_sleex() {
         // AxOS stuff
         "sleex",
         "sleex-optional",
+
+        // Other stuff
+        "fastfetch",
+        "firefox",
+        "pipewire-pulse",
+        "papirus-icon-theme",
+        "inxi",
+        "power-profiles-daemon",
+        "fwupd",
+        "gnome-autoar",
+        "overskide",
+        "gnome-system-monitor",
+        "baobab",
+        "gparted",
+        "gnome-calculator",
+        "loupe",
+        "nwg-displays"
         ]);
     enable_dm("sddm");
     set_sddm_sleex_default();
