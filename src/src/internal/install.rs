@@ -7,5 +7,5 @@ pub fn install(pkgs: Vec<&str>) {
         Command::new("pacstrap").arg("/mnt").args(&pkgs).status(),
         format!("Install packages {}", pkgs.join(", ")).as_str(),
     );
-    umount("/mnt/dev");
+    // umount("/mnt/dev");
 }
