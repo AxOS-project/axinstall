@@ -4,14 +4,21 @@ pub fn exec_eval(
     return_code: std::result::Result<std::process::ExitStatus, std::io::Error>,
     logmsg: &str,
 ) {
-    match &return_code {
-        Ok(_) => {
-            log::info!("{}", logmsg);
+    match return_code {
+        Ok(status) => {
+            if status.success() {
+                log::info!("{}", logmsg);
+            } else {
+                crash(
+                    format!("{}  ERROR: exited with code {}", logmsg, status.code().unwrap_or(-1)),
+                    status.code().unwrap_or(1),
+                );
+            }
         }
         Err(e) => {
             crash(
                 format!("{}  ERROR: {}", logmsg, e),
-                return_code.unwrap_err().raw_os_error().unwrap(),
+                e.raw_os_error().unwrap_or(1),
             );
         }
     }
