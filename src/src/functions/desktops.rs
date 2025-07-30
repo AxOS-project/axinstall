@@ -93,7 +93,6 @@ fn install_sleex() {
         "power-profiles-daemon",
         "fwupd",
         "gnome-autoar",
-        "overskide",
         "gnome-system-monitor",
         "baobab",
         "gparted",
