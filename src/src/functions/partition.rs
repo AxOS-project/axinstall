@@ -293,8 +293,6 @@ pub fn mount(partition: &str, mountpoint: &str, options: &str) {
 }
 
 pub fn umount(mountpoint: &str) {
-    exec_eval(
-        exec("umount", vec![String::from(mountpoint)]),
-        format!("unmount {}", mountpoint).as_str(),
-    );
+    let _ = exec("umount", vec![String::from(mountpoint)]);
+    let _ = format!("unmount {}", mountpoint).as_str();
 }

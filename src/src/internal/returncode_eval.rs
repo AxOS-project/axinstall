@@ -1,4 +1,5 @@
 use crate::internal::*;
+use crate::functions::partition::umount;
 
 pub fn exec_eval(
     return_code: std::result::Result<std::process::ExitStatus, std::io::Error>,
@@ -9,6 +10,8 @@ pub fn exec_eval(
             if status.success() {
                 log::info!("{}", logmsg);
             } else {
+                umount("/mnt/boot/efi");
+                umount("/mnt/");
                 crash(
                     format!("{}  ERROR: exited with code {}", logmsg, status.code().unwrap_or(-1)),
                     status.code().unwrap_or(1),
@@ -16,6 +19,8 @@ pub fn exec_eval(
             }
         }
         Err(e) => {
+            umount("/mnt/boot/efi");
+            umount("/mnt/");
             crash(
                 format!("{}  ERROR: {}", logmsg, e),
                 e.raw_os_error().unwrap_or(1),
