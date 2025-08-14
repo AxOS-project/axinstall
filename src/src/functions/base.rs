@@ -5,6 +5,8 @@ use std::path::PathBuf;
 
 pub fn install_base_packages(kernel: String) {
     std::fs::create_dir_all("/mnt/etc").unwrap();
+    std::fs::create_dir_all("/mnt/var/cache/pacman/pkg").unwrap();
+    std::fs::create_dir_all("/mnt/var/lib/pacman").unwrap();
     let kernel_to_install = if kernel.is_empty() {
         "linux"
     } else {
