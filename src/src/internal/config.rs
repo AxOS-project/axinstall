@@ -192,10 +192,7 @@ pub fn read_config(configpath: PathBuf) {
         userkit::install_userkit(args::UserKit::Entertainment);
     }
     log::info!("Extra packages : {:?}", config.extra_packages);
-    let mut extra_packages: Vec<&str> = Vec::new();
-    for i in 0..config.extra_packages.len() {
-        extra_packages.push(config.extra_packages[i].as_str());
-    }
+    let extra_packages: Vec<String> = config.extra_packages.clone();
     install(extra_packages);
     println!();
     println!("Installation finished! You may reboot now!")

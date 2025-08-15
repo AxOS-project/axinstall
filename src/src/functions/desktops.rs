@@ -16,7 +16,7 @@ pub fn install_desktop_setup(desktop_setup: DesktopSetup) {
 }
 
 fn install_networkmanager() {
-    install(vec!["networkmanager"]);
+    install(vec![String::from("networkmanager")]);
     exec_eval(
         exec_chroot(
             "systemctl",
@@ -28,28 +28,27 @@ fn install_networkmanager() {
 
 fn install_calla() {
     install(vec![
-        "calla",
-        "alacritty",
-        "nautilus",
-        "polkit-gnome",
-        "cbatticon",
-        "blueman",
-        "ttf-roboto",
-        "noto-fonts-emoji",
-        "ttf-material-icons-git",
-        "ttf-material-design-icons-extended",
-        "playerctl",
-        "redshift",
-        "xsettingsd",
-        "galculator",
-        "baobab",
-        "gnome-characters",
-        "mousepad",
-        "gparted",
-        "wmctrl",
-        "libinput-gestures",
-        "lollypop",
-
+        String::from("calla"),
+        String::from("alacritty"),
+        String::from("nautilus"),
+        String::from("polkit-gnome"),
+        String::from("cbatticon"),
+        String::from("blueman"),
+        String::from("ttf-roboto"),
+        String::from("noto-fonts-emoji"),
+        String::from("ttf-material-icons-git"),
+        String::from("ttf-material-design-icons-extended"),
+        String::from("playerctl"),
+        String::from("redshift"),
+        String::from("xsettingsd"),
+        String::from("galculator"),
+        String::from("baobab"),
+        String::from("gnome-characters"),
+        String::from("mousepad"),
+        String::from("gparted"),
+        String::from("wmctrl"),
+        String::from("libinput-gestures"),
+        String::from("lollypop"),
     ]);
     enable_dm("sddm");
 }
@@ -57,14 +56,14 @@ fn install_calla() {
 
 fn install_kde() {
     install(vec![
-        "plasma-meta",
-        "konsole",
-        "kate",
-        "dolphin",
-        "ark",
-        "plasma-workspace",
-        "axskel",
-        "papirus-icon-theme",
+        String::from("plasma-meta"),
+        String::from("konsole"),
+        String::from("kate"),
+        String::from("dolphin"),
+        String::from("ark"),
+        String::from("plasma-workspace"),
+        String::from("axskel"),
+        String::from("papirus-icon-theme"), 
     ]);
     enable_dm("sddm");
 }
@@ -73,42 +72,41 @@ fn install_kde() {
 fn install_sleex() {
     install(vec![
         // Hyprland stuff
-        "hyprland",
-        "hyprlang",
-        "hyprcursor",
-        "hyprutils",
-        "hyprlock",
-        "hyprpicker",
-        "hyprwayland-scanner",
-        // AxOS stuff
-        "sleex",
-        "sleex-optional",
+            String::from("hyprland"),
+            String::from("hyprlang"),
+            String::from("hyprcursor"),
+            String::from("hyprutils"),
+            String::from("hyprlock"),
+            String::from("hyprpicker"),
+            String::from("hyprwayland-scanner"),
+            // AxOS stuff
+            String::from("sleex"),
+            String::from("sleex-optional"),
 
-        // Other stuff
-        "fastfetch",
-        "firefox",
-        "pipewire-pulse",
-        "papirus-icon-theme",
-        "inxi",
-        "power-profiles-daemon",
-        "fwupd",
-        "gnome-autoar",
-        "gnome-system-monitor",
-        "baobab",
-        "gparted",
-        "gnome-calculator",
-        "loupe",
-        "nwg-displays"
-        ]);
+            // Other stuff
+            String::from("fastfetch"),
+            String::from("firefox"),
+            String::from("pipewire-pulse"),
+            String::from("papirus-icon-theme"),
+            String::from("inxi"),
+            String::from("power-profiles-daemon"),
+            String::from("fwupd"),
+            String::from("gnome-autoar"),
+            String::from("gnome-system-monitor"),
+            String::from("baobab"),
+            String::from("gparted"),
+            String::from("gnome-calculator"),
+            String::from("loupe"),
+            String::from("nwg-displays") ]);
     enable_dm("sddm");
     set_sddm_sleex_default();
 }
 
 fn install_theom() {
     install(vec![
-        "theom",
-        "gammastep",
-        "mousepad"
+        String::from("theom"),
+        String::from("gammastep"),
+        String::from("mousepad")
         ]);
     enable_dm("sddm");
 }

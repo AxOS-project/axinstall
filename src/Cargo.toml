@@ -19,3 +19,5 @@ log = "0.4.16"
 flexi_logger = {version = "0.22.3", features = ["colors"] }
 lazy_static = "1.4.0"
 human-panic = "1.0.3"
+indicatif = "0.18.0"
+regex = "1.11.1"

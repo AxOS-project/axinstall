@@ -5,8 +5,6 @@ use std::path::PathBuf;
 
 pub fn install_base_packages(kernel: String) {
     std::fs::create_dir_all("/mnt/etc").unwrap();
-    std::fs::create_dir_all("/mnt/var/cache/pacman/pkg").unwrap();
-    std::fs::create_dir_all("/mnt/var/lib/pacman").unwrap();
     let kernel_to_install = if kernel.is_empty() {
         "linux"
     } else {
@@ -23,82 +21,82 @@ pub fn install_base_packages(kernel: String) {
     };
     install::install(vec![
         // Base Arch
-        "base",
-        kernel_to_install,
-        format!("{kernel_to_install}-headers").as_str(),
-        "linux-firmware",
-        "sof-firmware", // required for newer sound cards [ESSENTIAL]
-        "man-db",
-        "man-pages",
-        "nano",
-        "sudo",
-        "curl",
-        "wget",
-        "archlinux-keyring",
-        "grep",
+        String::from("base"),
+        String::from(kernel_to_install),
+        format!("{kernel_to_install}-headers"),
+        String::from("linux-firmware"),
+        String::from("sof-firmware"), // required for newer sound cards [ESSENTIAL]
+        String::from("man-db"),
+        String::from("man-pages"),
+        String::from("nano"),
+        String::from("sudo"),
+        String::from("curl"),
+        String::from("wget"),
+        String::from("archlinux-keyring"),
+        String::from("grep"),
         // Base AxOS
-        "about-axos",
-        "axos-hooks",
-        "axos-hooks-extra",
-        "plymouth-theme-axos",
-        "epsilon",
-        "axos-wallpaper-collection",
-        "grub-theme-axos",
-        "axctl",
+        String::from("about-axos"),
+        String::from("axos-hooks"),
+        String::from("axos-hooks-extra"),
+        String::from("plymouth-theme-axos"),
+        String::from("epsilon"),
+        String::from("axos-wallpaper-collection"),
+        String::from("grub-theme-axos"),
+        String::from("axctl"),
         // Extra goodies
-        "fastfetch", // stable now contains the AxOS ASCII logo
-        "axos/plymouth",
-        "plymouth-theme-axos",
+        String::from("fastfetch"), // stable now contains the AxOS ASCII logo
+        String::from("axos/plymouth"),
+        String::from("plymouth-theme-axos"),
         // Fonts
-        "noto-fonts",
-        "noto-fonts-cjk",
-        "noto-fonts-extra",
-        "ttf-nerd-fonts-symbols-common",
+        String::from("noto-fonts"),
+        String::from("noto-fonts-cjk"),
+        String::from("noto-fonts-extra"),
+        String::from("ttf-nerd-fonts-symbols-common"),
         // Common packages for all desktops
-        "pipewire",
-        "pipewire-pulse",
-        "pipewire-alsa",
-        // "pipewire-jack",
-        "wireplumber",
-        "power-profiles-daemon",
-        "cups",
-        "cups-pdf",
-        "bluez",
-        "bluez-cups",
-        "zsh-completions",
-        "ttf-liberation",
-        "dnsmasq",
-        "xdg-user-dirs",
-        "firefox",
-        "bash",
-        "bash-completion",
-        "inxi",
-        "acpi",
-        "htop",
-        "fwupd",
-        "ntp",
-        "kf6",
-        "packagekit-qt6",
-        "gnome-packagekit",
-        "packagekit",
-        "unzip",
+        String::from("pipewire"),
+        String::from("pipewire-pulse"),
+        String::from("pipewire-alsa"),
+        // String::from("pipewire-jack"),
+        String::from("wireplumber"),
+        String::from("power-profiles-daemon"),
+        String::from("cups"),
+        String::from("cups-pdf"),
+        String::from("bluez"),
+        String::from("bluez-cups"),
+        String::from("zsh-completions"),
+        String::from("ttf-liberation"),
+        String::from("dnsmasq"),
+        String::from("xdg-user-dirs"),
+        String::from("firefox"),
+        String::from("bash"),
+        String::from("bash-completion"),
+        String::from("inxi"),
+        String::from("acpi"),
+        String::from("htop"),
+        String::from("fwupd"),
+        String::from("ntp"),
+        String::from("kf6"),
+        String::from("packagekit-qt6"),
+        String::from("gnome-packagekit"),
+        String::from("packagekit"),
+        String::from("unzip"),
         // Graphic drivers
-        "xf86-video-amdgpu",
-        "xf86-video-intel",
-        "xf86-video-nouveau",
-        // "xf86-video-vmware",
-        "xf86-video-vesa",
-        "mesa",
-        "vulkan-intel",
-        "vulkan-radeon",
-        "vulkan-icd-loader",
-        // "virtualbox-guest-utils",
+        String::from("xf86-video-amdgpu"),
+        String::from("xf86-video-intel"),
+        String::from("xf86-video-nouveau"),
+        // String::from("xf86-video-vmware"),
+        String::from("xf86-video-vesa"),
+        String::from("mesa"),
+        String::from("vulkan-intel"),
+        String::from("vulkan-radeon"),
+        String::from("vulkan-icd-loader"),
+        // String::from("virtualbox-guest-utils"),
         // Chaotic-AUR
-        "chaotic-keyring",
-        "chaotic-mirrorlist",
+        String::from("chaotic-keyring"),
+        String::from("chaotic-mirrorlist"),
         // Display manager
-        "sddm",
-        "sddm-theme-axos",
+        String::from("sddm"),
+        String::from("sddm-theme-axos"),
     ]);
     files::copy_file("/etc/pacman.conf", "/mnt/etc/pacman.conf");
 
@@ -135,7 +133,7 @@ pub fn setup_archlinux_keyring() {
 
 // Function to add the Flathub remote for Flatpak
 pub fn install_flatpak() {
-    install(vec!["flatpak"]);
+    install(vec![String::from("flatpak")]);
     exec_eval(
         exec_chroot(
             "flatpak",
@@ -164,7 +162,7 @@ pub fn genfstab() {
 }
 
 pub fn install_bootloader_efi(efidir: PathBuf) {
-    install::install(vec!["axos/grub", "efibootmgr", "os-prober"]);
+    install::install(vec![String::from("axos/grub"), String::from("efibootmgr"), String::from("os-prober")]);
     let efidir = std::path::Path::new("/mnt").join(efidir);
     let efi_str = efidir.to_str().unwrap();
     if !std::path::Path::new(&format!("/mnt{efi_str}")).exists() {
@@ -203,7 +201,7 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
 }
 
 pub fn install_bootloader_legacy(device: PathBuf) {
-    install::install(vec!["axos/grub", "os-prober"]);
+    install::install(vec![String::from("axos/grub"), String::from("os-prober")]);
     if !device.exists() {
         crash(format!("The device {device:?} does not exist"), 1);
     }
@@ -237,7 +235,13 @@ pub fn copy_live_config() {
 }
 
 pub fn install_nvidia() {
-    install(vec!["dkms", "nvidia", "nvidia-dkms", "nvidia-utils", "egl-wayland"]);
+    install(vec![
+        String::from("dkms"),
+        String::from("nvidia"),
+        String::from("nvidia-dkms"),
+        String::from("nvidia-utils"),
+        String::from("egl-wayland"),
+    ]);
 
     // Apply nvidia module in grub
     let grub_cmdline_content = std::fs::read_to_string("/mnt/etc/default/grub").unwrap_or_default();
