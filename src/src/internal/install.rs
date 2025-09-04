@@ -31,8 +31,8 @@ pub fn install(pkgs: Vec<String>) {
     let total_packages = Arc::new(Mutex::new(None::<u64>));
 
     exec_eval(
-        Command::new("epsi")
-        .arg("sync")
+        Command::new("pacman")
+        .arg("-Sy")
         .status(),
         "Syncing repositories"
     );
