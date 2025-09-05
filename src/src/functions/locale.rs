@@ -68,24 +68,19 @@ pub fn set_keyboard(keyboard: &str) {
         ),
         "set keyboard layout in vconsole",
     );
-    exec_eval(
-        exec_chroot(
-            "localectl",
-            vec![
-                "set-x11-keymap".to_string(),
-                keyboard.to_string(),
-            ],
+
+    files_eval(
+        files::write_file(
+            "/mnt/etc/X11/xorg.conf.d/00-keyboard.conf",
+            &format!(
+                "Section \"InputClass\"\n\
+                 Identifier \"system-keyboard\"\n\
+                 MatchIsKeyboard \"on\"\n\
+                 Option \"XkbLayout\" \"{}\"\n\
+                 EndSection\n",
+                keyboard
+            ),
         ),
-        "Set x11 keymap",
-    );
-    exec_eval(
-        exec_chroot(
-            "localectl",
-            vec![
-                "set-keymap".to_string(),
-                keyboard.to_string(),
-            ],
-        ),
-        "Set global keymap",
+        "set X11 keyboard layout",
     );
 }

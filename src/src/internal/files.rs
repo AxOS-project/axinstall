@@ -46,5 +46,23 @@ pub fn sed_file(path: &str, find: &str, replace: &str) -> std::io::Result<()> {
 }
 
 pub fn create_directory(path: &str) -> std::io::Result<()> {
-    std::fs::create_dir_all(path)
+    std::fs::create_dir_all(path)?;
+    log::info!("Create directory {}", path);
+    Ok(())
+}
+
+pub fn write_file(path: &str, content: &str) -> std::io::Result<()> {
+    log::info!("Write file {}", path);
+
+    if let Some(parent) = std::path::Path::new(path).parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(path)?;
+    file.write_all(content.as_bytes())?;
+    Ok(())
 }
