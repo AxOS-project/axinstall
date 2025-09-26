@@ -1,6 +1,6 @@
 pkgname=axinstall-cli
 pkgver=1.22
-pkgrel=5
+pkgrel=6
 pkgdesc="AxOS installer backend"
 arch=('x86_64')
 license=('GPL')
