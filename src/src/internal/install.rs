@@ -7,7 +7,7 @@ pub fn install(pkgs: Vec<String>, attempt_retries: bool) {
         let result = retry(3, || Command::new("pacstrap").arg("/mnt").args(&pkgs).status());
         exec_eval(result, &format!("Install packages {}", pkgs.join(", ")));
     } else {
-        exec_eval(
+        soft_exec_eval(
             Command::new("pacstrap").arg("/mnt").args(&pkgs).status(),
             format!("Install packages {}", pkgs.join(", ")).as_str(),
         );

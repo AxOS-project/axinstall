@@ -29,6 +29,28 @@ pub fn exec_eval(
     }
 }
 
+pub fn soft_exec_eval(
+    return_code: std::result::Result<std::process::ExitStatus, std::io::Error>,
+    logmsg: &str,
+) {
+    match return_code {
+        Ok(status) => {
+            if status.success() {
+                log::info!("{}", logmsg);
+            } else {
+                umount("/mnt/boot/efi");
+                umount("/mnt/");
+                log::error!("{}  ERROR: exited with code {}", logmsg, status.code().unwrap_or(-1));
+            }
+        }
+        Err(e) => {
+            umount("/mnt/boot/efi");
+            umount("/mnt/");
+            log::error!("{}  ERROR: {}", logmsg, e.raw_os_error().unwrap_or(1));
+        }
+    }
+}
+
 pub fn files_eval(return_code: std::result::Result<(), std::io::Error>, logmsg: &str) {
     match &return_code {
         Ok(_) => {
