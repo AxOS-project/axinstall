@@ -19,7 +19,7 @@ pub fn new_user(username: &str, hasroot: bool, password: &str, do_hash_pass: boo
         "zsh" => "zsh",
         &_ => "bash",
     };
-    install::install(vec![String::from(shell_to_install)]);
+    install::install(vec![String::from(shell_to_install)], true);
     let shell_path = match shell {
         "bash" => "/bin/bash",
         "csh" => "/usr/bin/csh",

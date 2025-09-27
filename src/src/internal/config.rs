@@ -193,7 +193,7 @@ pub fn read_config(configpath: PathBuf) {
     }
     log::info!("Extra packages : {:?}", config.extra_packages);
     let extra_packages: Vec<String> = config.extra_packages.clone();
-    install(extra_packages);
+    install(extra_packages, false);
     println!();
     println!("Installation finished! You may reboot now!")
 }

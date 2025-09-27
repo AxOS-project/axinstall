@@ -16,21 +16,21 @@ pub fn install_userkit(kit: UserKit) {
 }
 
 fn install_dev() {
-    install(vec![String::from("axos-developer-kit")]);
+    install(vec![String::from("axos-developer-kit")], false);
 }
 
 fn install_hacks() {
-    install(vec![String::from("axos-hacker-kit")]);
+    install(vec![String::from("axos-hacker-kit")], false);
 }
 
 fn install_artist() {
-    install(vec![String::from("axos-artist-kit")]);
+    install(vec![String::from("axos-artist-kit")], false);
 }
 
 fn install_office() {
-    install(vec![String::from("axos-office-kit")]);
+    install(vec![String::from("axos-office-kit")], false);
 }
 
 fn install_entertainment() {
-    install(vec![String::from("axos-entertainment-kit")])
+    install(vec![String::from("axos-entertainment-kit")], false)
 }

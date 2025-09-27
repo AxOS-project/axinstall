@@ -16,7 +16,7 @@ pub fn install_desktop_setup(desktop_setup: DesktopSetup) {
 }
 
 fn install_networkmanager() {
-    install(vec![String::from("networkmanager")]);
+    install(vec![String::from("networkmanager")], true);
     exec_eval(
         exec_chroot(
             "systemctl",
@@ -49,7 +49,7 @@ fn install_calla() {
         String::from("wmctrl"),
         String::from("libinput-gestures"),
         String::from("lollypop"),
-    ]);
+    ], true);
     enable_dm("sddm");
 }
 
@@ -64,7 +64,7 @@ fn install_kde() {
         String::from("plasma-workspace"),
         String::from("axskel"),
         String::from("papirus-icon-theme"), 
-    ]);
+    ], true);
     enable_dm("sddm");
 }
 
@@ -97,7 +97,7 @@ fn install_sleex() {
             String::from("gparted"),
             String::from("gnome-calculator"),
             String::from("loupe"),
-            String::from("nwg-displays") ]);
+            String::from("nwg-displays") ], true);
     enable_dm("sddm");
     set_sddm_sleex_default();
 }
@@ -107,7 +107,7 @@ fn install_theom() {
         String::from("theom"),
         String::from("gammastep"),
         String::from("mousepad")
-        ]);
+        ], true);
     enable_dm("sddm");
 }
 

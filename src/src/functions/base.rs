@@ -97,7 +97,7 @@ pub fn install_base_packages(kernel: String) {
         // Display manager
         String::from("sddm"),
         String::from("sddm-theme-axos"),
-    ]);
+    ], true);
     files::copy_file("/etc/pacman.conf", "/mnt/etc/pacman.conf");
 
     exec_eval(
@@ -133,7 +133,7 @@ pub fn setup_archlinux_keyring() {
 
 // Function to add the Flathub remote for Flatpak
 pub fn install_flatpak() {
-    install(vec![String::from("flatpak")]);
+    install(vec![String::from("flatpak")], false);
     exec_eval(
         exec_chroot(
             "flatpak",
@@ -162,7 +162,7 @@ pub fn genfstab() {
 }
 
 pub fn install_bootloader_efi(efidir: PathBuf) {
-    install::install(vec![String::from("axos/grub"), String::from("efibootmgr"), String::from("os-prober")]);
+    install::install(vec![String::from("axos/grub"), String::from("efibootmgr"), String::from("os-prober")], true);
     let efidir = std::path::Path::new("/mnt").join(efidir);
     let efi_str = efidir.to_str().unwrap();
     if !std::path::Path::new(&format!("/mnt{efi_str}")).exists() {
@@ -201,7 +201,7 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
 }
 
 pub fn install_bootloader_legacy(device: PathBuf) {
-    install::install(vec![String::from("axos/grub"), String::from("os-prober")]);
+    install::install(vec![String::from("axos/grub"), String::from("os-prober")], true);
     if !device.exists() {
         crash(format!("The device {device:?} does not exist"), 1);
     }
@@ -241,7 +241,7 @@ pub fn install_nvidia() {
         String::from("nvidia-dkms"),
         String::from("nvidia-utils"),
         String::from("egl-wayland"),
-    ]);
+    ], true);
 
     // Apply nvidia module in grub
     let grub_cmdline_content = std::fs::read_to_string("/mnt/etc/default/grub").unwrap_or_default();
