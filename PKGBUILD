@@ -1,5 +1,5 @@
 pkgname=axinstall-cli
-pkgver=1.23
+pkgver=1.24
 pkgrel=6
 pkgdesc="AxOS installer backend"
 arch=('x86_64')
