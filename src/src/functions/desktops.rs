@@ -109,6 +109,7 @@ fn install_theom() {
         String::from("mousepad")
         ], true);
     enable_dm("sddm");
+    set_sddm_theom_default();
 }
 
 fn set_sddm_sleex_default() {
@@ -132,6 +133,29 @@ fn set_sddm_sleex_default() {
         ),
         "Rename hyprland-uwsm.desktop to hyprland-uwsm.desktop.hidden",
     );
+}
+
+fn set_sddm_theom_default() {
+    exec_eval(
+        exec_chroot(
+            "mv",
+            vec![
+                String::from("/usr/share/xsessions/i3.desktop"),
+                String::from("/usr/share/xsessions/i3.desktop.hidden"),
+            ],
+        ),
+        "Rename i3.desktop to i3.desktop.hidden",
+    ); 
+    exec_eval(
+        exec_chroot(
+            "mv",
+            vec![
+                String::from("/usr/share/xsessions/i3-with-shmlog.desktop.desktop"),
+                String::from("/usr/share/xsessions/i3-with-shmlog.desktop.desktop.hidden"),
+            ],
+        ),
+        "Rename i3-with-shmlog.desktop.desktop to i3-with-shmlog.desktop.desktop.hidden",
+    ); 
 }
 
 fn enable_dm(dm: &str) {
