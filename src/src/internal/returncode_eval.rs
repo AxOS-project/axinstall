@@ -1,6 +1,12 @@
 use crate::internal::*;
 use crate::functions::partition::umount;
 
+/// ### Evaluates the result of a command execution.
+///
+/// - If the command succeeds, logs an informational message.
+/// - If the command fails or returns an error:
+///   - Unmounts `/mnt/boot/efi` and `/mnt/`.
+///   - Calls [`crash`] with the provided log message and the exit code or error code.
 pub fn exec_eval(
     return_code: std::result::Result<std::process::ExitStatus, std::io::Error>,
     logmsg: &str,
@@ -29,6 +35,12 @@ pub fn exec_eval(
     }
 }
 
+/// Evaluates the result of a command execution in a non-fatal way.
+///
+/// - If the command succeeds, logs an informational message.
+/// - If the command fails or returns an error:
+///   - Unmounts `/mnt/boot/efi` and `/mnt/`.
+///   - Logs the error, but does not terminate the program (unlike [`exec_eval`]).
 pub fn soft_exec_eval(
     return_code: std::result::Result<std::process::ExitStatus, std::io::Error>,
     logmsg: &str,

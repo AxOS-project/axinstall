@@ -3,6 +3,7 @@ use crate::args::DesktopSetup;
 use crate::internal::exec::*;
 use crate::internal::*;
 
+/// Will install the provided desktop on the installation
 pub fn install_desktop_setup(desktop_setup: DesktopSetup) {
     log::debug!("Installing {:?}", desktop_setup);
     match desktop_setup {

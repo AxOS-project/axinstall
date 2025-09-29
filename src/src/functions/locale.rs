@@ -1,6 +1,9 @@
 use crate::internal::exec::*;
 use crate::internal::*;
 
+/// Will set the timezone by creating a symlink between the `/usr/share/zoneinfo/wanted_timezone` and `/etc/localtime`.
+/// 
+/// Then, `hwclock` will sync the clock
 pub fn set_timezone(timezone: &str) {
     exec_eval(
         exec_chroot(
@@ -19,6 +22,7 @@ pub fn set_timezone(timezone: &str) {
     );
 }
 
+/// Will set the system locale by appending values to locale.gen and locale.conf
 pub fn set_locale(locale: String) {
     files_eval(
         files::append_file("/mnt/etc/locale.gen", "en_US.UTF-8 UTF-8"),
@@ -59,6 +63,7 @@ pub fn set_locale(locale: String) {
     exec_eval(exec_chroot("locale-gen", vec![]), "generate locales");
 }
 
+/// Will set the kb layout by editing `vconsole.conf` and `/etc/X11/xorg.conf.d/00-keyboard.conf`.
 pub fn set_keyboard(keyboard: &str) {
     files::create_file("/mnt/etc/vconsole.conf");
     files_eval(

@@ -3,6 +3,9 @@ use crate::internal::*;
 use log::warn;
 use std::path::PathBuf;
 
+/// ### Installs the base packages for the system to proprely work. 
+/// This functions takes the kernel to install as an argument. 
+/// - eg: `install_base_packages("linux-zen")`.
 pub fn install_base_packages(kernel: String) {
     std::fs::create_dir_all("/mnt/etc").unwrap();
     let kernel_to_install = if kernel.is_empty() {
@@ -117,6 +120,8 @@ pub fn install_base_packages(kernel: String) {
     );
 }
 
+/// ### This will setup the archlinux keyring using the `pacman-key` command.
+/// It will first initialize it with the `--init` flag, then populate it with the `--populate` flag.
 pub fn setup_archlinux_keyring() {
     exec_eval(
         exec_chroot("pacman-key", vec![String::from("--init")]),
@@ -125,13 +130,14 @@ pub fn setup_archlinux_keyring() {
     exec_eval(
         exec_chroot(
             "pacman-key",
-            vec![String::from("--populate"), String::from("archlinux")],
+            vec![String::from("--populate")],
         ),
         "Populate pacman keyring",
     );
 }
 
-// Function to add the Flathub remote for Flatpak
+/// ### Function to add the Flathub remote for Flatpak.
+/// This is not available in axinstall GUI because I don't like flatpak
 pub fn install_flatpak() {
     install(vec![String::from("flatpak")], false);
     exec_eval(
@@ -148,6 +154,7 @@ pub fn install_flatpak() {
     );
 }
 
+/// Generates the file system tab in `/mnt/etc/fstab` using the `genfstab` command.
 pub fn genfstab() {
     exec_eval(
         exec(
@@ -161,6 +168,10 @@ pub fn genfstab() {
     );
 }
 
+/// ### Install GRUB
+/// This will first install the patched grub from the AxOS repo, then install efibootmgr and os-prober.
+/// 
+/// Then, it will use `grub-install` to install the grub in the efidir, provided as an arg to this function.
 pub fn install_bootloader_efi(efidir: PathBuf) {
     install::install(vec![String::from("axos/grub"), String::from("efibootmgr"), String::from("os-prober")], true);
     let efidir = std::path::Path::new("/mnt").join(efidir);
@@ -200,6 +211,7 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
     );
 }
 
+/// Is here but never used as AxOS doesn't support legacy BIOS.
 pub fn install_bootloader_legacy(device: PathBuf) {
     install::install(vec![String::from("axos/grub"), String::from("os-prober")], true);
     if !device.exists() {
@@ -222,6 +234,7 @@ pub fn install_bootloader_legacy(device: PathBuf) {
     );
 }
 
+/// Copy some files from the live to the installation
 pub fn copy_live_config() {
     files::copy_file("/etc/pacman.conf", "/mnt/etc/pacman.conf");
     files::copy_file("/etc/axos-version", "/mnt/etc/axos-version");
@@ -234,6 +247,7 @@ pub fn copy_live_config() {
     // files::copy_file("/etc/mkinitcpio.conf", "/mnt/etc/mkinitcpio.conf"); // Why is this even there ???
 }
 
+/// Will install basic NVIDIA packages, and then patch the grub and initcpio config to accept nvidia GPUs it's modules.
 pub fn install_nvidia() {
     install(vec![
         String::from("dkms"),
@@ -281,6 +295,7 @@ pub fn install_nvidia() {
 
 }
 
+/// Will enable swap (self explainatory)
 pub fn enable_swap(size: u64) {
     let size_mb = size.to_string();
     exec_eval(
