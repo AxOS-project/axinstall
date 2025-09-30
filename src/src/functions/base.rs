@@ -100,6 +100,8 @@ pub fn install_base_packages(kernel: String) {
         // Display manager
         String::from("sddm"),
         String::from("sddm-theme-axos"),
+        // MAC System
+        String::from("apparmor"),
     ], true);
     files::copy_file("/etc/pacman.conf", "/mnt/etc/pacman.conf");
 
@@ -201,6 +203,25 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
             ],
         ),
         "install grub as efi without --removable",
+    );
+    exec_eval(
+        exec_chroot(
+            "systemctl",
+            vec![String::from("enable"), String::from("apparmor.service")],
+        ),
+        "enable AppArmor service",
+    );
+    let lsm_param = "lsm=landlock,lockdown,yama,integrity,apparmor,bpf";
+    exec_eval(
+        exec_chroot(
+            "sed",
+            vec![
+                String::from("-i"),
+                format!(r#"/^\s*GRUB_CMDLINE_LINUX_DEFAULT=(.*)({lsm_param}.*|"$)"/ !s//\1 {lsm_param}/"#, lsm_param = lsm_param),
+                String::from("/etc/default/grub"),
+            ],
+        ),
+        "append AppArmor LSM param to GRUB config",
     );
     exec_eval(
         exec_chroot(
