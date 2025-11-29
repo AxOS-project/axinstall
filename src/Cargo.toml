@@ -2,7 +2,7 @@
 name = "axinstall-cli"
 description = "The new installer for AxOS, contains backend and TUI"
 authors = ["Ardox <ardox@axos-project.com>"]
-version = "1.24.0"
+version = "1.25.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
