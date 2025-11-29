@@ -217,7 +217,10 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
             "sed",
             vec![
                 String::from("-i"),
-                format!(r#"/^\s*GRUB_CMDLINE_LINUX_DEFAULT=(.*)({lsm_param}.*|"$)"/ !s//\1 {lsm_param}/"#, lsm_param = lsm_param),
+                format!(
+                    r#"'/^\s*GRUB_CMDLINE_LINUX_DEFAULT=/ s/lsm=[^ \"\'']*//g; s/\"$/ {lsm_param}\"/'"#,
+                    lsm_param = lsm_param
+                ),
                 String::from("/etc/default/grub"),
             ],
         ),
