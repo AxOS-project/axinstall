@@ -137,7 +137,7 @@ fn set_sddm_sleex_default() {
 }
 
 fn set_sddm_theom_default() {
-    exec_eval(
+    soft_exec_eval(
         exec_chroot(
             "mv",
             vec![
@@ -147,15 +147,15 @@ fn set_sddm_theom_default() {
         ),
         "Rename i3.desktop to i3.desktop.hidden",
     ); 
-    exec_eval(
+    soft_exec_eval(
         exec_chroot(
             "mv",
             vec![
-                String::from("/usr/share/xsessions/i3-with-shmlog.desktop.desktop"),
-                String::from("/usr/share/xsessions/i3-with-shmlog.desktop.desktop.hidden"),
+                String::from("/usr/share/xsessions/i3-with-shmlog.desktop"),
+                String::from("/usr/share/xsessions/i3-with-shmlog.desktop.hidden"),
             ],
         ),
-        "Rename i3-with-shmlog.desktop.desktop to i3-with-shmlog.desktop.desktop.hidden",
+        "Rename i3-with-shmlog.desktop to i3-with-shmlog.desktop.hidden",
     ); 
 }
 

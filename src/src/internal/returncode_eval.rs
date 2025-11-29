@@ -39,8 +39,7 @@ pub fn exec_eval(
 ///
 /// - If the command succeeds, logs an informational message.
 /// - If the command fails or returns an error:
-///   - Unmounts `/mnt/boot/efi` and `/mnt/`.
-///   - Logs the error, but does not terminate the program (unlike [`exec_eval`]).
+///   - Logs the error, but does not terminate or umount the program (unlike [`exec_eval`]).
 pub fn soft_exec_eval(
     return_code: std::result::Result<std::process::ExitStatus, std::io::Error>,
     logmsg: &str,
@@ -50,14 +49,10 @@ pub fn soft_exec_eval(
             if status.success() {
                 log::info!("{}", logmsg);
             } else {
-                umount("/mnt/boot/efi");
-                umount("/mnt/");
                 log::error!("{}  ERROR: exited with code {}", logmsg, status.code().unwrap_or(-1));
             }
         }
         Err(e) => {
-            umount("/mnt/boot/efi");
-            umount("/mnt/");
             log::error!("{}  ERROR: {}", logmsg, e.raw_os_error().unwrap_or(1));
         }
     }
