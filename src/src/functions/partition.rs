@@ -1,6 +1,6 @@
 // To be reviewed
 
-use crate::args;
+use crate::args::{self, Partition};
 use crate::args::PartitionMode;
 use crate::internal::exec::*;
 use crate::internal::*;
@@ -291,6 +291,17 @@ pub fn mount(partition: &str, mountpoint: &str, options: &str) {
         );
     }
 }
+
+
+pub fn umount_partitions(partitions: &mut Vec<Partition>) {
+    let partitions = partitions;
+    partitions.sort_by(|a, b| b.mountpoint.len().cmp(&a.mountpoint.len()));
+    for partition in partitions {
+        log::info!("Unmounting partition at {}", partition.mountpoint);
+        umount(&partition.mountpoint);
+    }
+}
+
 
 pub fn umount(mountpoint: &str) {
     let _ = exec("umount", vec![String::from(mountpoint)]);
