@@ -88,6 +88,7 @@ pub fn read_config(configpath: PathBuf) {
     log::info!("Block device to use : /dev/{}", config.partition.device);
     log::info!("Partitioning mode : {:?}", config.partition.mode);
     log::info!("Partitioning for EFI : {}", config.partition.efi);
+    partition::umount_partitions(config.partition.device.clone());
     let mut partitions: Vec<args::Partition> = Vec::new();
     for partition in config.partition.partitions {
         partitions.push(args::Partition::new(

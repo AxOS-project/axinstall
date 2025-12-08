@@ -16,8 +16,6 @@ fn main() {
     match opt.command {
         Command::Partition(args) => {
             let mut partitions = args.partitions;
-            // Umount partitions before starting
-            partition::umount_partitions(&mut partitions);
             partition::partition(args.device, args.mode, args.efi, &mut partitions);
         }
         Command::InstallBase(args) => {

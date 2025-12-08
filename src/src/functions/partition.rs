@@ -1,6 +1,6 @@
 // To be reviewed
 
-use crate::args::{self, Partition};
+use crate::args::{self};
 use crate::args::PartitionMode;
 use crate::internal::exec::*;
 use crate::internal::*;
@@ -293,12 +293,35 @@ pub fn mount(partition: &str, mountpoint: &str, options: &str) {
 }
 
 
-pub fn umount_partitions(partitions: &mut Vec<Partition>) {
-    let partitions = partitions;
-    partitions.sort_by(|a, b| b.mountpoint.len().cmp(&a.mountpoint.len()));
-    for partition in partitions {
-        log::info!("Unmounting partition at {}", partition.mountpoint);
-        umount(&partition.mountpoint);
+pub fn umount_partitions(device: String) {
+    let output = exec_output("lsblk", vec![
+        String::from("-J"),
+        String::from("-o"),
+        String::from("NAME,MOUNTPOINT"),
+        format!("/dev/{}", device),
+    ]);
+        
+    if let Ok(output) = output {
+        if let Ok(output_str) = String::from_utf8(output.into()) {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&output_str) {
+                if let Some(blockdevices) = json["blockdevices"].as_array() {
+                    for blockdevice in blockdevices {
+                        if let Some(children) = blockdevice["children"].as_array() {
+                            for child in children {
+                                if let Some(mountpoint) = child["mountpoint"].as_str() {
+                                    log::debug!("Unmounting {}", mountpoint);
+                                    umount(mountpoint);
+                                }
+                            }
+                        }
+                        if let Some(mountpoint) = blockdevice["mountpoint"].as_str() {
+                            log::debug!("Unmounting {}", mountpoint);
+                            umount(mountpoint);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
