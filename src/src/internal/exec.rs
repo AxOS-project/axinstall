@@ -9,6 +9,19 @@ pub fn exec(command: &str, args: Vec<String>) -> Result<std::process::ExitStatus
     returncode
 }
 
+/// Executes a command and returns the output as a String.
+/// 
+/// Usage: 
+/// ```
+/// let output = exec_output("ls", vec!["-l".to_string()]).unwrap();
+/// println!("Output: {}", output);
+/// ```
+pub fn exec_output(command: &str, args: Vec<String>) -> Result<String, std::io::Error> {
+    let output = Command::new(command).args(args).output()?;
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    Ok(stdout)
+}
+
 /// Executes a command inside the target system using `arch-chroot`.
 ///
 /// Wraps the command in a `bash -c "arch-chroot /mnt ..."` invocation,
