@@ -275,7 +275,6 @@ pub fn copy_live_config() {
 pub fn install_nvidia() {
     install(vec![
         String::from("dkms"),
-        String::from("nvidia"),
         String::from("nvidia-dkms"),
         String::from("nvidia-utils"),
         String::from("egl-wayland"),
