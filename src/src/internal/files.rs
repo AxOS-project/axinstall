@@ -66,3 +66,35 @@ pub fn write_file(path: &str, content: &str) -> std::io::Result<()> {
     file.write_all(content.as_bytes())?;
     Ok(())
 }
+
+/// Helper function to update GRUB_CMDLINE_LINUX_DEFAULT in /mnt/etc/default/grub
+pub fn update_grub_cmdline(key: &str, value: &str) {
+    let grub_path = "/mnt/etc/default/grub";
+    let content = std::fs::read_to_string(grub_path).unwrap_or_else(|_| String::from("GRUB_CMDLINE_LINUX_DEFAULT=\"\""));
+    
+    let mut found = false;
+    let mut new_lines: Vec<String> = content.lines().map(|line| {
+        if line.trim().starts_with("GRUB_CMDLINE_LINUX_DEFAULT=") {
+            found = true;
+            
+            let current_params = line.split('"').nth(1).unwrap_or("");
+            let mut params: Vec<&str> = current_params.split_whitespace().collect();
+
+            // Remove existing instances of the key (e.g., if we're setting lsm=, remove old lsm=)
+            let prefix = if key.contains('=') { key.split('=').next().unwrap() } else { key };
+            params.retain(|p| !p.starts_with(prefix));
+
+            params.push(value);
+
+            format!("GRUB_CMDLINE_LINUX_DEFAULT=\"{}\"", params.join(" "))
+        } else {
+            line.to_string()
+        }
+    }).collect();
+
+    if !found {
+        new_lines.push(format!("GRUB_CMDLINE_LINUX_DEFAULT=\"{}\"", value));
+    }
+
+    std::fs::write(grub_path, new_lines.join("\n")).unwrap();
+}

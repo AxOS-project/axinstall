@@ -211,21 +211,7 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
         ),
         "enable AppArmor service",
     );
-    let lsm_param = "lsm=landlock,lockdown,yama,integrity,apparmor,bpf";
-    exec_eval(
-        exec_chroot(
-            "sed",
-            vec![
-                String::from("-i"),
-                format!(
-                    r#"'/^\s*GRUB_CMDLINE_LINUX_DEFAULT=/ s/lsm=[^ \"\'']*//g; s/\"$/ {lsm_param}\"/'"#,
-                    lsm_param = lsm_param
-                ),
-                String::from("/etc/default/grub"),
-            ],
-        ),
-        "append AppArmor LSM param to GRUB config",
-    );
+    files::update_grub_cmdline("lsm", "lsm=landlock,lockdown,yama,integrity,apparmor,bpf");
     exec_eval(
         exec_chroot(
             "grub-mkconfig",
@@ -281,21 +267,7 @@ pub fn install_nvidia() {
     ], true);
 
     // Apply nvidia module in grub
-    let grub_cmdline_content = std::fs::read_to_string("/mnt/etc/default/grub").unwrap_or_default();
-    let mut grub_conf_found = false;
-    let mut lines: Vec<String> = grub_cmdline_content.lines().map(|line| {
-        if line.starts_with("GRUB_CMDLINE_LINUX_DEFAULT=") {
-            grub_conf_found = true;
-            if line.contains("nvidia-drm.modeset=1") {
-                line.to_string() // Already there, do nothing
-            } else {
-                line.replace("GRUB_CMDLINE_LINUX_DEFAULT=\"", "GRUB_CMDLINE_LINUX_DEFAULT=\"nvidia-drm.modeset=1 ")
-            }
-        } else { line.to_string() }
-    }).collect();
-    if !grub_conf_found { lines.push("GRUB_CMDLINE_LINUX_DEFAULT=\"nvidia-drm.modeset=1\"".to_string()); }
-    let new_grub_content = lines.join("\n");
-    std::fs::write("/mnt/etc/default/grub", new_grub_content).unwrap();
+    files::update_grub_cmdline("nvidia-drm.modeset", "nvidia-drm.modeset=1");
 
     // Apply initcpio modules
     let mkinitcpio_content = std::fs::read_to_string("/mnt/etc/mkinitcpio.conf").unwrap_or_default();
