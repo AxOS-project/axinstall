@@ -196,9 +196,6 @@ pub enum DesktopSetup {
     #[clap(name = "kde", aliases = ["plasma"])]
     Kde,
 
-    #[clap(name = "calla")]
-    Calla,
-
     #[clap(name = "sleex")]
     Sleex,
 

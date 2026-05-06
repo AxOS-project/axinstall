@@ -139,7 +139,6 @@ pub fn read_config(configpath: PathBuf) {
     match config.desktop.to_lowercase().as_str() {
         "kde" => desktops::install_desktop_setup(DesktopSetup::Kde),
         "plasma" => desktops::install_desktop_setup(DesktopSetup::Kde),
-        "calla" => desktops::install_desktop_setup(DesktopSetup::Calla),
         "sleex" => desktops::install_desktop_setup(DesktopSetup::Sleex),
         "theom" => desktops::install_desktop_setup(DesktopSetup::Theom),
         "none/diy" => desktops::install_desktop_setup(DesktopSetup::None),

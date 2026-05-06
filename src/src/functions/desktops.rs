@@ -8,7 +8,6 @@ pub fn install_desktop_setup(desktop_setup: DesktopSetup) {
     log::debug!("Installing {:?}", desktop_setup);
     match desktop_setup {
         DesktopSetup::Kde => install_kde(),
-        DesktopSetup::Calla => install_calla(),
         DesktopSetup::Sleex => install_sleex(),
         DesktopSetup::Theom => install_theom(),
         DesktopSetup::None => log::debug!("No desktop setup selected"),
@@ -26,34 +25,6 @@ fn install_networkmanager() {
         "Enable network manager",
     );
 }
-
-fn install_calla() {
-    install(vec![
-        String::from("calla"),
-        String::from("alacritty"),
-        String::from("nautilus"),
-        String::from("polkit-gnome"),
-        String::from("cbatticon"),
-        String::from("blueman"),
-        String::from("ttf-roboto"),
-        String::from("noto-fonts-emoji"),
-        String::from("ttf-material-icons-git"),
-        String::from("ttf-material-design-icons-extended"),
-        String::from("playerctl"),
-        String::from("redshift"),
-        String::from("xsettingsd"),
-        String::from("galculator"),
-        String::from("baobab"),
-        String::from("gnome-characters"),
-        String::from("mousepad"),
-        String::from("gparted"),
-        String::from("wmctrl"),
-        String::from("libinput-gestures"),
-        String::from("lollypop"),
-    ], true);
-    enable_dm("sddm");
-}
-
 
 fn install_kde() {
     install(vec![
