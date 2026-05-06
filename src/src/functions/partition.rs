@@ -41,6 +41,21 @@ pub fn fmt_mount(mountpoint: &str, filesystem: &str, blockdevice: &str) {
     mount(blockdevice, mountpoint, "");
 }
 
+fn split_partition(blockdevice: &str) -> (String, String) {
+    let num_start = blockdevice.trim_end_matches(|c: char| c.is_ascii_digit()).len();
+    let num = blockdevice[num_start..].to_string();
+
+    let disk = if blockdevice.contains("nvme") || blockdevice.contains("mmcblk") {
+        // /dev/nvme0n1p2 -> /dev/nvme0n1
+        blockdevice[..num_start].trim_end_matches('p').to_string()
+    } else {
+        // /dev/sda2 -> /dev/sda
+        blockdevice[..num_start].to_string()
+    };
+
+    (disk, num)
+}
+
 pub fn partition(
     device: PathBuf,
     mode: PartitionMode,
@@ -73,15 +88,16 @@ pub fn partition(
                     &partition.filesystem,
                     &partition.blockdevice,
                 );
+                let (disk, part_num) = split_partition(&partition.blockdevice);
                 if &partition.mountpoint == "/boot/efi" {
                     exec_eval(
                         exec(
                             "parted",
                             vec![
                                 String::from("-s"),
-                                String::from(&partition.blockdevice),
+                                String::from(&disk),
                                 String::from("set"),
-                                String::from("1"),
+                                String::from(&part_num),
                                 String::from("esp"),
                                 String::from("on"),
                             ],
