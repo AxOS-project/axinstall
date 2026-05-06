@@ -8,27 +8,31 @@ use std::path::{Path, PathBuf};
 use log;
 
 pub fn fmt_mount(mountpoint: &str, filesystem: &str, blockdevice: &str) {
-    let fs_command = match filesystem {
-        "ext4" => ("mkfs.ext4", vec![String::from(blockdevice)]),
-        "fat32" => ("mkfs.fat", vec![String::from("-F32"), String::from(blockdevice)]),
-        "btrfs" => ("mkfs.btrfs", vec![String::from("-f"), String::from(blockdevice)]),
-        "xfs" => ("mkfs.xfs", vec![String::from(blockdevice)]),
+    match filesystem {
+        "ext4" => exec_eval(
+            exec("mkfs.ext4", vec![String::from(blockdevice)]),
+            format!("Formatting {blockdevice} as ext4").as_str(),
+        ),
+        "fat32" => exec_eval(
+            exec("mkfs.fat", vec![String::from("-F32"), String::from(blockdevice)]),
+            format!("Formatting {blockdevice} as fat32").as_str(),
+        ),
+        "btrfs" => exec_eval(
+            exec("mkfs.btrfs", vec![String::from("-f"), String::from(blockdevice)]),
+            format!("Formatting {blockdevice} as btrfs").as_str(),
+        ),
+        "xfs" => exec_eval(
+            exec("mkfs.xfs", vec![String::from(blockdevice)]),
+            format!("Formatting {blockdevice} as xfs").as_str(),
+        ),
         "noformat" | "don't format" => {
             log::debug!("Not formatting {}", blockdevice);
-            return;
         }
-        _ => {
-            crash(
-                format!("Unknown filesystem {filesystem}, used in partition {blockdevice}"),
-                1,
-            );
-        }
-    };
-
-    exec_eval(
-        exec(fs_command.0, fs_command.1),
-        format!("Formatting {blockdevice} as {filesystem}").as_str(),
-    );
+        _ => crash(
+            format!("Unknown filesystem {filesystem}, used in partition {blockdevice}"),
+            1,
+        ),
+    }
 
     exec_eval(
         exec("mkdir", vec![String::from("-p"), String::from(mountpoint)]),
