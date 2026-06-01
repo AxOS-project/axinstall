@@ -315,5 +315,5 @@ pub fn enable_swap(size: u64) {
         exec("mkswap", vec![String::from("/mnt/swapfile")]),
         "Format swapfile",
     );
-    std::fs::write("/mnt/etc/fstab", "\n/swapfile none swap defaults 0 0\n").unwrap();
+    files::append_file("/mnt/etc/fstab", "\n/swapfile none swap defaults 0 0\n").unwrap();
 }
