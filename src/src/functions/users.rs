@@ -4,13 +4,18 @@ use std::process::Command;
 
 pub fn new_user(username: &str, hasroot: bool, password: &str, do_hash_pass: bool, shell: &str) {
     let shell: &str = shell;
-    if do_hash_pass {
-        let hashed_pass = &*hash_pass(password).stdout;
-        let _password = match std::str::from_utf8(hashed_pass) {
+    let password_str = if do_hash_pass {
+        let hashed_pass = hash_pass(password).stdout;
+        match String::from_utf8(hashed_pass) {
             Ok(v) => v,
             Err(e) => panic!("Failed to hash password, invalid UTF-8 sequence {}", e),
-        };
-    }
+        }
+    } else {
+        password.to_string()
+    };
+    let clean_pass = password_str.trim().trim_matches('\'');
+    let quoted_pass = format!("'{clean_pass}'");
+
     let shell_to_install = match shell {
         "bash" => "bash",
         "csh" => "tcsh",
@@ -36,7 +41,7 @@ pub fn new_user(username: &str, hasroot: bool, password: &str, do_hash_pass: boo
                 String::from("-s"),
                 String::from(shell_path),
                 String::from("-p"),
-                String::from(password).replace('\n', ""),
+                quoted_pass,
                 String::from(username),
             ],
         ),
@@ -68,14 +73,26 @@ pub fn new_user(username: &str, hasroot: bool, password: &str, do_hash_pass: boo
         );
         files_eval(
             files::create_directory("/mnt/var/lib/AccountsService/users/"),
-            "Create /mnt/var/lib/AcountsService",
+            "Create /mnt/var/lib/AccountsService",
         );
         files::create_file(&format!("/mnt/var/lib/AccountsService/users/{}", username));
+        let session_line =
+            if std::path::Path::new("/mnt/usr/share/wayland-sessions/sleex.desktop").exists() {
+                "Session=sleex\n"
+            } else if std::path::Path::new("/mnt/usr/share/xsessions/theom.desktop").exists() {
+                "Session=theom\n"
+            } else if std::path::Path::new("/mnt/usr/share/wayland-sessions/plasma.desktop")
+                .exists()
+                || std::path::Path::new("/mnt/usr/share/xsessions/plasma.desktop").exists()
+            {
+                "Session=plasma\n"
+            } else {
+                ""
+            };
         files_eval(
             files::append_file(
                 &format!("/mnt/var/lib/AccountsService/users/{}", username),
-                r#"[User]
-                Session=plasma"#,
+                &format!("[User]\n{}SystemAccount=false", session_line),
             ),
             format!("Populate AccountsService user file for {}", username).as_str(),
         )
@@ -84,19 +101,29 @@ pub fn new_user(username: &str, hasroot: bool, password: &str, do_hash_pass: boo
 
 pub fn hash_pass(password: &str) -> std::process::Output {
     let output = Command::new("openssl")
-        .args(["passwd", "-1", password])
+        .args(["passwd", "-6", password])
         .output()
         .expect("Failed to hash password");
     output
 }
 
 pub fn root_pass(root_pass: &str) {
+    let clean_pass = root_pass.trim().trim_matches('\'');
+    if clean_pass.is_empty() {
+        log::info!("Root password is empty, locking root account");
+        exec_eval(
+            exec_chroot("passwd", vec![String::from("-l"), String::from("root")]),
+            "lock root account",
+        );
+        return;
+    }
     exec_eval(
         exec_chroot(
-            "bash",
+            "usermod",
             vec![
-                String::from("-c"),
-                format!(r#"'usermod --password {root_pass} root'"#),
+                String::from("--password"),
+                format!("'{}'", clean_pass),
+                String::from("root"),
             ],
         ),
         "set root password",

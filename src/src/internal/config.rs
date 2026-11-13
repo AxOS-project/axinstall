@@ -24,6 +24,8 @@ struct Config {
     office_uk: bool,
     entertainment_uk: bool,
     flatpak: bool,
+    #[serde(default)]
+    chaotic_aur: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -88,24 +90,45 @@ pub fn read_config(configpath: PathBuf) {
     log::info!("Block device to use : /dev/{}", config.partition.device);
     log::info!("Partitioning mode : {:?}", config.partition.mode);
     log::info!("Partitioning for EFI : {}", config.partition.efi);
-    log::info!("Umounting any mounted partitions on /dev/{}", config.partition.device);
-    partition::umount_partitions(config.partition.device.clone());
+    if !config.partition.device.is_empty() {
+        log::info!(
+            "Umounting any mounted partitions on /dev/{}",
+            config.partition.device
+        );
+        partition::umount_partitions(config.partition.device.clone());
+    }
     let mut partitions: Vec<args::Partition> = Vec::new();
     for partition in config.partition.partitions {
-        partitions.push(args::Partition::new(
-            partition.split(':').collect::<Vec<&str>>()[0].to_string(),
-            partition.split(':').collect::<Vec<&str>>()[1].to_string(),
-            partition.split(':').collect::<Vec<&str>>()[2].to_string(),
-        ));
+        let parts: Vec<&str> = partition.split(':').collect();
+        if parts.len() >= 3 {
+            let mp = parts[0].trim();
+            if mp.is_empty() || mp == "none" || mp == "/mnt/none" {
+                continue;
+            }
+            let (disk, _) = partition::split_partition(parts[1]);
+            if !disk.is_empty() {
+                partition::umount_partitions(disk);
+            }
+            partitions.push(args::Partition::new(
+                mp.to_string(),
+                parts[1].to_string(),
+                parts[2].to_string(),
+            ));
+        }
     }
-    let device = PathBuf::from("/dev/").join(config.partition.device.as_str());
+    let device = if config.partition.device.starts_with("/dev/") {
+        PathBuf::from(&config.partition.device)
+    } else {
+        PathBuf::from("/dev/").join(config.partition.device.as_str())
+    };
     partition::partition(
-        device,
+        device.clone(),
         config.partition.mode,
         config.partition.efi,
         &mut partitions,
     );
     base::install_base_packages(config.kernel);
+    base::configure_chaotic_aur(config.chaotic_aur);
     base::setup_archlinux_keyring();
     if config.flatpak {
         base::install_flatpak();
@@ -114,7 +137,31 @@ pub fn read_config(configpath: PathBuf) {
     println!();
     log::info!("Installing bootloader : {}", config.bootloader.r#type);
     log::info!("Installing bootloader to : {}", config.bootloader.location);
-    base::install_bootloader_efi(PathBuf::from(config.bootloader.location));    
+    if config.bootloader.r#type == "grub-legacy" || !config.partition.efi {
+        let raw_loc = if !config.bootloader.location.is_empty()
+            && config.bootloader.location != "/boot/efi/"
+            && config.bootloader.location != "/boot/efi"
+        {
+            config.bootloader.location.clone()
+        } else if !config.partition.device.is_empty() {
+            config.partition.device.clone()
+        } else {
+            partitions
+                .iter()
+                .find(|p| p.mountpoint == "/mnt" || p.mountpoint == "/")
+                .or_else(|| partitions.first())
+                .map(|p| partition::split_partition(&p.blockdevice).0)
+                .unwrap_or_default()
+        };
+        let legacy_dev = if raw_loc.starts_with("/dev/") {
+            PathBuf::from(raw_loc)
+        } else {
+            PathBuf::from("/dev/").join(raw_loc)
+        };
+        base::install_bootloader_legacy(legacy_dev);
+    } else {
+        base::install_bootloader_efi(PathBuf::from(config.bootloader.location));
+    }
     println!();
     log::info!("Adding Locales : {:?}", config.locale.locale);
     log::info!("Using keymap : {}", config.locale.keymap);
@@ -167,6 +214,7 @@ pub fn read_config(configpath: PathBuf) {
     println!();
     log::info!("Copying live config");
     base::copy_live_config();
+    base::configure_chaotic_aur(config.chaotic_aur);
     println!();
     log::info!("Enabling nvidia : {}", config.nvidia);
     if config.nvidia {
@@ -192,9 +240,11 @@ pub fn read_config(configpath: PathBuf) {
     if config.entertainment_uk {
         userkit::install_userkit(args::UserKit::Entertainment);
     }
-    log::info!("Extra packages : {:?}", config.extra_packages);
-    let extra_packages: Vec<String> = config.extra_packages.clone();
-    install(extra_packages, false);
+    if !config.extra_packages.is_empty() {
+        log::info!("Extra packages : {:?}", config.extra_packages);
+        let extra_packages: Vec<String> = config.extra_packages.clone();
+        install(extra_packages, false);
+    }
     println!();
     println!("Installation finished! You may reboot now!")
 }

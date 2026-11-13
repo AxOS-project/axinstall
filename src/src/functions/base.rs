@@ -8,6 +8,9 @@ use std::path::PathBuf;
 /// - eg: `install_base_packages("linux-zen")`.
 pub fn install_base_packages(kernel: String) {
     std::fs::create_dir_all("/mnt/etc").unwrap();
+    if std::path::Path::new("/etc/axos-version").exists() {
+        files::copy_file("/etc/axos-version", "/mnt/etc/axos-version");
+    }
     let kernel_to_install = if kernel.is_empty() {
         "linux"
     } else {
@@ -104,6 +107,9 @@ pub fn install_base_packages(kernel: String) {
         String::from("apparmor"),
     ], true);
     files::copy_file("/etc/pacman.conf", "/mnt/etc/pacman.conf");
+    if !std::path::Path::new("/mnt/etc/pacman.d/chaotic-mirrorlist").exists() {
+        strip_chaotic_aur("/mnt/etc/pacman.conf");
+    }
 
     exec_eval(
         exec_chroot(
@@ -176,10 +182,12 @@ pub fn genfstab() {
 /// Then, it will use `grub-install` to install the grub in the efidir, provided as an arg to this function.
 pub fn install_bootloader_efi(efidir: PathBuf) {
     install::install(vec![String::from("axos/grub"), String::from("efibootmgr"), String::from("os-prober")], true);
-    let efidir = std::path::Path::new("/mnt").join(efidir);
-    let efi_str = efidir.to_str().unwrap();
-    if !std::path::Path::new(&format!("/mnt{efi_str}")).exists() {
-        crash(format!("The efidir {efidir:?} doesn't exist"), 1);
+    let raw = efidir.to_string_lossy();
+    let trimmed = raw.trim_start_matches("/mnt").trim_start_matches('/');
+    let efi_str = format!("/{}", trimmed.trim_end_matches('/'));
+    let host_efi = format!("/mnt{}", efi_str);
+    if !std::path::Path::new(&host_efi).exists() {
+        crash(format!("The efidir {host_efi} doesn't exist"), 1);
     }
     exec_eval(
         exec_chroot(
@@ -221,7 +229,7 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
     );
 }
 
-/// Is here but never used as AxOS doesn't support legacy BIOS.
+/// Install GRUB in legacy BIOS mode
 pub fn install_bootloader_legacy(device: PathBuf) {
     install::install(vec![String::from("axos/grub"), String::from("os-prober")], true);
     if !device.exists() {
@@ -237,6 +245,14 @@ pub fn install_bootloader_legacy(device: PathBuf) {
     );
     exec_eval(
         exec_chroot(
+            "systemctl",
+            vec![String::from("enable"), String::from("apparmor.service")],
+        ),
+        "enable AppArmor service",
+    );
+    files::update_grub_cmdline("lsm", "lsm=landlock,lockdown,yama,integrity,apparmor,bpf");
+    exec_eval(
+        exec_chroot(
             "grub-mkconfig",
             vec![String::from("-o"), String::from("/boot/grub/grub.cfg")],
         ),
@@ -244,17 +260,71 @@ pub fn install_bootloader_legacy(device: PathBuf) {
     );
 }
 
+pub fn strip_chaotic_aur(pacman_conf_path: &str) {
+    if let Ok(content) = std::fs::read_to_string(pacman_conf_path) {
+        let mut out = Vec::new();
+        let mut in_chaotic = false;
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with('[') && trimmed.ends_with(']') {
+                if trimmed == "[chaotic-aur]" {
+                    in_chaotic = true;
+                    continue;
+                } else {
+                    in_chaotic = false;
+                }
+            }
+            if in_chaotic {
+                continue;
+            }
+            if trimmed.starts_with("#Chaotic aur") {
+                continue;
+            }
+            out.push(line);
+        }
+        let _ = std::fs::write(pacman_conf_path, out.join("\n") + "\n");
+    }
+}
+
+pub fn configure_chaotic_aur(enable: bool) {
+    let pacman_conf = "/mnt/etc/pacman.conf";
+    if !enable || !std::path::Path::new("/mnt/etc/pacman.d/chaotic-mirrorlist").exists() {
+        strip_chaotic_aur(pacman_conf);
+    } else if let Ok(content) = std::fs::read_to_string(pacman_conf) {
+        if !content.contains("[chaotic-aur]") {
+            let _ = files::append_file(
+                pacman_conf,
+                "[chaotic-aur]\nSigLevel = Optional TrustAll\nInclude = /etc/pacman.d/chaotic-mirrorlist",
+            );
+        }
+    }
+}
+
 /// Copy some files from the live to the installation
 pub fn copy_live_config() {
     files::copy_file("/etc/pacman.conf", "/mnt/etc/pacman.conf");
-    files::copy_file("/etc/axos-version", "/mnt/etc/axos-version");
+    if !std::path::Path::new("/mnt/etc/pacman.d/chaotic-mirrorlist").exists() {
+        strip_chaotic_aur("/mnt/etc/pacman.conf");
+    }
+    if std::path::Path::new("/etc/axos-version").exists() {
+        files::copy_file("/etc/axos-version", "/mnt/etc/axos-version");
+    }
+    if std::path::Path::new("/mnt/usr/bin/reload-releases").exists() {
+        soft_exec_eval(
+            exec_chroot("/usr/bin/reload-releases", vec![]),
+            "Reload AxOS release info",
+        );
+    }
     std::fs::create_dir_all("/mnt/etc/sddm.conf.d").unwrap();
-    files::copy_file(
-        "/etc/sddm.conf.d/settings.conf",
-        "/mnt/etc/sddm.conf.d/settings.conf",
-    );
-    files::copy_file("/etc/sddm.conf", "/mnt/etc/sddm.conf");
-    // files::copy_file("/etc/mkinitcpio.conf", "/mnt/etc/mkinitcpio.conf"); // Why is this even there ???
+    if std::path::Path::new("/etc/sddm.conf.d/settings.conf").exists() {
+        files::copy_file(
+            "/etc/sddm.conf.d/settings.conf",
+            "/mnt/etc/sddm.conf.d/settings.conf",
+        );
+    }
+    if std::path::Path::new("/etc/sddm.conf").exists() {
+        files::copy_file("/etc/sddm.conf", "/mnt/etc/sddm.conf");
+    }
 }
 
 /// Will install basic NVIDIA packages, and then patch the grub and initcpio config to accept nvidia GPUs it's modules.
@@ -285,13 +355,25 @@ pub fn install_nvidia() {
     if !mkinitcpio_conf_found {
         final_lines.push("MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)".to_string());
     }
-    let new_initcpio_content = final_lines.join("\n");
+    let new_initcpio_content = final_lines.join("\n") + "\n";
     std::fs::write("/mnt/etc/mkinitcpio.conf", new_initcpio_content).unwrap();
 
+    exec_eval(
+        exec_chroot("mkinitcpio", vec![String::from("-P")]),
+        "Regenerate initramfs with Nvidia modules",
+    );
+    exec_eval(
+        exec_chroot(
+            "grub-mkconfig",
+            vec![String::from("-o"), String::from("/boot/grub/grub.cfg")],
+        ),
+        "Regenerate grub.cfg with Nvidia kernel parameters",
+    );
 }
 
 /// Will enable swap (self explainatory)
 pub fn enable_swap(size: u64) {
+    let _ = std::fs::remove_file("/mnt/swapfile");
     let size_mb = size.to_string();
     exec_eval(
         exec(

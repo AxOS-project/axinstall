@@ -33,30 +33,22 @@ pub fn set_locale(locale: String) {
         files::append_file("/mnt/etc/locale.conf", "LANG=en_US.UTF-8"),
         "edit locale.conf",
     );
-    for i in (0..locale.split(' ').count()).step_by(2) {
+    let tokens: Vec<&str> = locale.split_whitespace().collect();
+    for i in (0..tokens.len()).step_by(2) {
+        if i + 1 >= tokens.len() {
+            break;
+        }
         files_eval(
             files::append_file(
                 "/mnt/etc/locale.gen",
-                &format!(
-                    "{} {}\n",
-                    locale.split(' ').collect::<Vec<&str>>()[i],
-                    locale.split(' ').collect::<Vec<&str>>()[i + 1]
-                ),
+                &format!("{} {}\n", tokens[i], tokens[i + 1]),
             ),
             "add locales to locale.gen",
         );
-        if locale.split(' ').collect::<Vec<&str>>()[i] != "en_US.UTF-8" {
+        if tokens[i] != "en_US.UTF-8" {
             files_eval(
-                files::sed_file(
-                    "/mnt/etc/locale.conf",
-                    "en_US.UTF-8",
-                    locale.split(' ').collect::<Vec<&str>>()[i],
-                ),
-                format!(
-                    "Set locale {} in /etc/locale.conf",
-                    locale.split(' ').collect::<Vec<&str>>()[i]
-                )
-                .as_str(),
+                files::sed_file("/mnt/etc/locale.conf", "en_US.UTF-8", tokens[i]),
+                format!("Set locale {} in /etc/locale.conf", tokens[i]).as_str(),
             );
         }
     }

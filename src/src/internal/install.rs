@@ -14,6 +14,9 @@ use std::process::Command;
 /// The result is passed to [`exec_eval`] (fatal on failure) or
 /// [`soft_exec_eval`] (non-fatal on failure), depending on the retry mode.
 pub fn install(pkgs: Vec<String>, attempt_retries: bool) {
+    if pkgs.is_empty() {
+        return;
+    }
     if attempt_retries {
         let result = retry(3, || Command::new("pacstrap").arg("/mnt").args(&pkgs).status());
         exec_eval(result, &format!("Install packages {}", pkgs.join(", ")));
@@ -29,16 +32,27 @@ pub fn install(pkgs: Vec<String>, attempt_retries: bool) {
 /// Retries a fallible operation a fixed number of times with exponential backoff.
 ///
 /// - Starts with a 1 second delay, then doubles (1s, 2s, 4s, ...).
-/// - Logs a warning on each failed attempt.
-/// - Returns the first successful result, or the final error if all attempts fail.
-fn retry<F, T>(mut attempts: u32, mut f: F) -> std::io::Result<T>
+/// - Logs a warning on each failed attempt (including non-zero exit status).
+/// - Returns the first successful result, or the final status/error if all attempts fail.
+fn retry<F>(mut attempts: u32, mut f: F) -> std::io::Result<std::process::ExitStatus>
 where
-    F: FnMut() -> std::io::Result<T>,
+    F: FnMut() -> std::io::Result<std::process::ExitStatus>,
 {
     let mut delay = 1;
     loop {
         match f() {
-            Ok(result) => return Ok(result),
+            Ok(status) if status.success() => return Ok(status),
+            Ok(status) if attempts > 1 => {
+                log::warn!(
+                    "Command exited with code {}. Retrying in {}s...",
+                    status.code().unwrap_or(-1),
+                    delay
+                );
+                std::thread::sleep(std::time::Duration::from_secs(delay));
+                attempts -= 1;
+                delay *= 2;
+            }
+            Ok(status) => return Ok(status),
             Err(e) if attempts > 1 => {
                 log::warn!("Operation failed: {}. Retrying in {}s...", e, delay);
                 std::thread::sleep(std::time::Duration::from_secs(delay));

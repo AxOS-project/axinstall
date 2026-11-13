@@ -85,7 +85,7 @@ fn install_theom() {
 }
 
 fn set_sddm_sleex_default() {
-    exec_eval(
+    soft_exec_eval(
         exec_chroot(
             "mv",
             vec![
@@ -95,7 +95,7 @@ fn set_sddm_sleex_default() {
         ),
         "Rename hyprland.desktop to hyprland.desktop.hidden",
     );
-    exec_eval(
+    soft_exec_eval(
         exec_chroot(
             "mv",
             vec![
