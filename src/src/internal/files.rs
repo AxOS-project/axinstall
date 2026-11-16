@@ -1,6 +1,7 @@
 use crate::internal::*;
 use std::fs::{self, File, OpenOptions};
-use std::io::prelude::*;
+use std::io::{self, prelude::*};
+use std::path::Path;
 
 pub fn create_file(path: &str) {
     let returncode = File::create(path);
@@ -27,6 +28,23 @@ pub fn copy_file(path: &str, destpath: &str) {
             );
         }
     }
+}
+
+/**
+ * Recursively copy a directory and its contents from `src` to `dst`.
+ */
+pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
 }
 
 pub fn append_file(path: &str, content: &str) -> std::io::Result<()> {

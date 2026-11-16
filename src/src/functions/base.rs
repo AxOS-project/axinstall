@@ -325,6 +325,12 @@ pub fn copy_live_config() {
     if std::path::Path::new("/etc/sddm.conf").exists() {
         files::copy_file("/etc/sddm.conf", "/mnt/etc/sddm.conf");
     }
+    if std::path::Path::new("/etc/NetworkManager/system-connections").exists() {
+        let _ = files::copy_dir(
+            "/etc/NetworkManager/system-connections/",
+            "/mnt/etc/NetworkManager/system-connections/",
+        );
+    }
 }
 
 /// Will install basic NVIDIA packages, and then patch the grub and initcpio config to accept nvidia GPUs it's modules.
