@@ -224,27 +224,9 @@ pub fn read_config(configpath: PathBuf) {
     if config.swap > 0 {
         base::enable_swap(config.swap);
     }
-    log::info!("Installing user kits");
-    if config.artist_uk {
-        userkit::install_userkit(args::UserKit::Artist);
-    }
-    if config.devel_uk {
-        userkit::install_userkit(args::UserKit::Developer);
-    }
-    if config.hacker_uk {
-        userkit::install_userkit(args::UserKit::Hacker);
-    }
-    if config.office_uk {
-        userkit::install_userkit(args::UserKit::Office);
-    }
-    if config.entertainment_uk {
-        userkit::install_userkit(args::UserKit::Entertainment);
-    }
-    if !config.extra_packages.is_empty() {
-        log::info!("Extra packages : {:?}", config.extra_packages);
-        let extra_packages: Vec<String> = config.extra_packages.clone();
-        install(extra_packages, false);
-    }
+    log::info!("Extra packages : {:?}", config.extra_packages);
+    let extra_packages: Vec<String> = config.extra_packages.clone();
+    install(extra_packages, false);
     println!();
     println!("Installation finished! You may reboot now!")
 }

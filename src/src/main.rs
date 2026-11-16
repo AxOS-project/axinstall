@@ -78,9 +78,6 @@ fn main() {
                 users::root_pass(&password);
             }
         },
-        Command::UserKit { kit } => {
-            userkit::install_userkit(kit);
-        }
         Command::InstallFlatpak => {
             base::install_flatpak();
         }
