@@ -18,11 +18,6 @@ struct Config {
     nvidia: bool,
     extra_packages: Vec<String>,
     kernel: String,
-    artist_uk: bool,
-    devel_uk: bool,
-    hacker_uk: bool,
-    office_uk: bool,
-    entertainment_uk: bool,
     flatpak: bool,
     #[serde(default)]
     chaotic_aur: bool,
