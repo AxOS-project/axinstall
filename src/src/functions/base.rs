@@ -1,35 +1,47 @@
 use crate::internal::exec::*;
 use crate::internal::*;
-use log::warn;
-use std::path::PathBuf;
+use log::{warn};
+use std::{path::PathBuf};
 
 /// ### Installs the base packages for the system to proprely work. 
 /// This functions takes the kernel to install as an argument. 
 /// - eg: `install_base_packages("linux-zen")`.
-pub fn install_base_packages(kernel: String) {
+pub fn install_base_packages(kernel: String, secure_boot: bool) {
     std::fs::create_dir_all("/mnt/etc").unwrap();
     if std::path::Path::new("/etc/axos-version").exists() {
         files::copy_file("/etc/axos-version", "/mnt/etc/axos-version");
     }
-    let kernel_to_install = if kernel.is_empty() {
-        "linux"
-    } else {
-        match kernel.as_str() {
-            "linux" => "linux",
-            "linux-lts" => "linux-lts",
-            "linux-zen" => "linux-zen",
-            "linux-hardened" => "linux-hardened",
-            _ => {
-                warn!("Unknown kernel: {}, using default instead", kernel);
-                "linux"
-            }
+
+    let kernel_to_install = match (secure_boot, kernel.as_str()) {
+        (true, "") | (true, "linux") => "axos-linux-signed",
+        (true, "linux-lts") => "axos-linux-lts-signed",
+        (true, "linux-zen") => "axos-linux-zen-signed",
+        (true, "linux-hardened") => "axos-linux-hardened-signed",
+        (false, "") | (false, "linux") => "linux",
+        (false, "linux-lts") => "linux-lts",
+        (false, "linux-zen") => "linux-zen",
+        (false, "linux-hardened") => "linux-hardened",
+        (_, _) => {
+            warn!("Unknown kernel: {}, using default instead", kernel);
+            if secure_boot { "axos-linux-signed" } else { "linux" }
+        }
+    };
+
+    let header_to_install = match kernel.as_str() {
+        "linux" | ""  => "linux-headers",
+        "linux-lts"  => "linux-lts-headers",
+        "linux-zen"  => "linux-zen-headers",
+        "linux-hardened"  => "linux-hardened-headers",
+        _ => {
+            warn!("Unknown kernel: {}, using default instead", kernel);
+            "linux-headers"
         }
     };
     install::install(vec![
         // Base Arch
         String::from("base"),
         String::from(kernel_to_install),
-        format!("{kernel_to_install}-headers"),
+        String::from(header_to_install),
         String::from("linux-firmware"),
         String::from("sof-firmware"), // required for newer sound cards [ESSENTIAL]
         String::from("man-db"),
@@ -106,6 +118,10 @@ pub fn install_base_packages(kernel: String) {
         // MAC System
         String::from("apparmor"),
     ], true);
+    if secure_boot {
+        let secure_boot_pkgs = ["shim", "mokutil", "axos-secureboot"];
+        install::install(secure_boot_pkgs.iter().map(|s| s.to_string()).collect(), true);
+    }
     files::copy_file("/etc/pacman.conf", "/mnt/etc/pacman.conf");
     if !std::path::Path::new("/mnt/etc/pacman.d/chaotic-mirrorlist").exists() {
         strip_chaotic_aur("/mnt/etc/pacman.conf");
@@ -180,7 +196,7 @@ pub fn genfstab() {
 /// This will first install the patched grub from the AxOS repo, then install efibootmgr and os-prober.
 /// 
 /// Then, it will use `grub-install` to install the grub in the efidir, provided as an arg to this function.
-pub fn install_bootloader_efi(efidir: PathBuf) {
+pub fn install_bootloader_efi(efidir: PathBuf, secure_boot: bool) {
     install::install(vec![String::from("axos/grub"), String::from("efibootmgr"), String::from("os-prober")], true);
     let raw = efidir.to_string_lossy();
     let trimmed = raw.trim_start_matches("/mnt").trim_start_matches('/');
@@ -189,26 +205,30 @@ pub fn install_bootloader_efi(efidir: PathBuf) {
     if !std::path::Path::new(&host_efi).exists() {
         crash(format!("The efidir {host_efi} doesn't exist"), 1);
     }
+    let mut grub_args = vec![
+        String::from("--target=x86_64-efi"),
+        format!("--efi-directory={}", efi_str),
+        String::from("--bootloader-id=axos"),
+    ];
+    if secure_boot {
+        grub_args.push(String::from("--disable-shim-lock"));
+        grub_args.push(String::from("--modules=tpm"));
+    }
     exec_eval(
         exec_chroot(
             "grub-install",
-            vec![
-                String::from("--target=x86_64-efi"),
-                format!("--efi-directory={}", efi_str),
-                String::from("--bootloader-id=axos"),
-                String::from("--removable"),
-            ],
+            {
+                let mut removable_grub_args = grub_args.clone();
+                removable_grub_args.push(String::from("--removable"));
+                removable_grub_args
+            },
         ),
         "install grub as efi with --removable",
     );
     exec_eval(
         exec_chroot(
             "grub-install",
-            vec![
-                String::from("--target=x86_64-efi"),
-                format!("--efi-directory={}", efi_str),
-                String::from("--bootloader-id=axos"),
-            ],
+            grub_args,
         ),
         "install grub as efi without --removable",
     );

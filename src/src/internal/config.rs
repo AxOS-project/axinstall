@@ -20,6 +20,8 @@ struct Config {
     kernel: String,
     flatpak: bool,
     #[serde(default)]
+    secure_boot: bool,
+    #[serde(default)]
     chaotic_aur: bool,
 }
 
@@ -122,7 +124,7 @@ pub fn read_config(configpath: PathBuf) {
         config.partition.efi,
         &mut partitions,
     );
-    base::install_base_packages(config.kernel);
+    base::install_base_packages(config.kernel, config.secure_boot);
     base::configure_chaotic_aur(config.chaotic_aur);
     base::setup_archlinux_keyring();
     if config.flatpak {
@@ -155,7 +157,7 @@ pub fn read_config(configpath: PathBuf) {
         };
         base::install_bootloader_legacy(legacy_dev);
     } else {
-        base::install_bootloader_efi(PathBuf::from(config.bootloader.location));
+        base::install_bootloader_efi(PathBuf::from(config.bootloader.location), config.secure_boot);
     }
     println!();
     log::info!("Adding Locales : {:?}", config.locale.locale);

@@ -1,6 +1,6 @@
 use clap::{ArgEnum, Args, Parser, Subcommand};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{path::PathBuf};
 
 #[derive(Debug, Parser)]
 #[clap(name="axinstall-cli", version=env!("CARGO_PKG_VERSION"), about=env!("CARGO_PKG_DESCRIPTION"), author=env!("CARGO_PKG_AUTHORS"))]
@@ -110,6 +110,8 @@ pub struct PartitionArgs {
 pub struct InstallBaseArgs {
     #[clap(long)]
     pub kernel: String,
+    #[clap(long)]
+    pub secure_boot: bool,
 }
 
 #[derive(Debug)]
@@ -153,6 +155,9 @@ pub enum BootloaderSubcommand {
     GrubEfi {
         /// The directory to install the EFI bootloader to
         efidir: PathBuf,
+        /// Whether to enable secure boot
+        #[clap(long)]
+        secure_boot: bool,
     },
 
     /// Install GRUB in legacy (BIOS) mode

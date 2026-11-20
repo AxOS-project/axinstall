@@ -19,7 +19,7 @@ fn main() {
             partition::partition(args.device, args.mode, args.efi, &mut partitions);
         }
         Command::InstallBase(args) => {
-            base::install_base_packages(args.kernel);
+            base::install_base_packages(args.kernel, args.secure_boot);
         }
         Command::SetupKeyring => {
             base::setup_archlinux_keyring();
@@ -28,8 +28,8 @@ fn main() {
             base::genfstab();
         }
         Command::Bootloader { subcommand } => match subcommand {
-            BootloaderSubcommand::GrubEfi { efidir } => {
-                base::install_bootloader_efi(efidir);
+            BootloaderSubcommand::GrubEfi { efidir, secure_boot } => {
+                base::install_bootloader_efi(efidir, secure_boot);
             }
             BootloaderSubcommand::GrubLegacy { device } => {
                 base::install_bootloader_legacy(device);
